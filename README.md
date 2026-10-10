@@ -16,23 +16,25 @@ python app.py
 Open `http://localhost:5000`. To use the terminal version instead, run
 `python main.py`.
 
-## Deploy the web UI with GitHub Pages
+## Deploy to Render
 
-GitHub Pages serves the static browser UI; it cannot run the Python chat
-backend. The `Deploy to GitHub Pages` workflow publishes the page whenever you
-push to `main`. In the repository settings, set **Pages → Build and deployment
-→ Source** to **GitHub Actions**.
+The `Build and deploy to Render` workflow validates the Flask app and triggers
+a Render deployment whenever you push to `main`. The app serves both the page
+and `/api/chat`, so it does not need a separate static-site host or
+`TOM_API_URL`.
 
-Host the Flask app as a separate web service (for example, on Render). The
-included `Procfile` starts it; the equivalent settings are:
+1. Create a **Web Service** on Render and connect this repository's `main`
+   branch.
+2. Set the build command to `pip install -r requirements.txt` and the start
+   command to `gunicorn app:app --bind 0.0.0.0:$PORT`.
+3. In the Render service settings, create a deploy hook and copy its URL.
+4. In GitHub, open **Settings → Secrets and variables → Actions → Secrets**,
+   create a repository secret named `RENDER_DEPLOY_HOOK_URL`, and paste the
+   deploy hook URL as its value.
+5. Disable Render's automatic deploy on push so that GitHub Actions is the
+   single deployment trigger.
 
-- Build command: `pip install -r requirements.txt`
-- Start command: `gunicorn app:app --bind 0.0.0.0:$PORT`
-
-Set the backend service's `TOM_ALLOWED_ORIGIN` environment variable to the
-GitHub Pages origin, such as `https://OWNER.github.io` (no trailing slash).
-Then add a repository Actions variable named `TOM_API_URL` under **Settings →
-Secrets and variables → Actions → Variables**. Set it to the backend's public
-base URL, such as `https://your-service.onrender.com` (no trailing slash). The
-workflow requires this variable and writes the URL into the published page. If
-you change the variable, run the workflow again to publish the update.
+After setup, push to `main` or manually run the workflow from the repository's
+**Actions** tab. The workflow runs a basic app smoke test before requesting a
+Render deployment. You can open the service's public URL from the Render
+dashboard once the first deployment completes.
