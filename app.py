@@ -1,8 +1,25 @@
+import os
+
 from flask import Flask, jsonify, render_template, request
 
 from main import match_response
 
 app = Flask(__name__)
+
+
+@app.after_request
+def allow_pages_origin(response):
+    allowed_origin = os.environ.get("TOM_ALLOWED_ORIGIN")
+    if (
+        request.path == "/api/chat"
+        and allowed_origin
+        and request.headers.get("Origin") == allowed_origin
+    ):
+        response.headers["Access-Control-Allow-Origin"] = allowed_origin
+        response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        response.vary.add("Origin")
+    return response
 
 
 @app.get("/")

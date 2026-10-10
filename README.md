@@ -16,14 +16,23 @@ python app.py
 Open `http://localhost:5000`. To use the terminal version instead, run
 `python main.py`.
 
-## Host from GitHub
+## Deploy the web UI with GitHub Pages
 
-GitHub stores the source code, but GitHub Pages cannot run a Python backend.
-Push this repository to GitHub, then create a Render Web Service connected to
-the repository. Render can use the included `Procfile`; the equivalent settings
-are:
+GitHub Pages serves the static browser UI; it cannot run the Python chat
+backend. The `Deploy to GitHub Pages` workflow publishes the page whenever you
+push to `main`. In the repository settings, set **Pages → Build and deployment
+→ Source** to **GitHub Actions**.
+
+Host the Flask app as a separate web service (for example, on Render). The
+included `Procfile` starts it; the equivalent settings are:
 
 - Build command: `pip install -r requirements.txt`
 - Start command: `gunicorn app:app --bind 0.0.0.0:$PORT`
 
-Deploy the service to get a public URL for the chatbot.
+Set the backend service's `TOM_ALLOWED_ORIGIN` environment variable to the
+GitHub Pages origin, such as `https://OWNER.github.io` (no trailing slash).
+Then add a repository Actions variable named `TOM_API_URL` under **Settings →
+Secrets and variables → Actions → Variables**. Set it to the backend's public
+base URL, such as `https://your-service.onrender.com` (no trailing slash). The
+workflow requires this variable and writes the URL into the published page. If
+you change the variable, run the workflow again to publish the update.
